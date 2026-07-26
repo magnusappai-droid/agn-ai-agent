@@ -7,6 +7,7 @@ import FirmModal from '@/components/FirmModal';
 import FilterSidebar from '@/components/FilterSidebar';
 import Greeting from '@/components/Greeting';
 import SearchBar from '@/components/SearchBar';
+import Tabs from '@/components/Tabs'
 
 const severityRank: Record<string, number> = {
   critical: 4,
@@ -86,6 +87,8 @@ export default function DashboardPage() {
         <Greeting />
         <SearchBar firms={firms} searchTerms={searchTerms} onChange={setSearchTerms} />
       </div>
+
+      <Tabs />
 
       <div className="dashboard-body">
         <FilterSidebar firms={firms} filters={filters} onChange={setFilters} />
