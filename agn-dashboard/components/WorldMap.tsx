@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
+import { ComposableMap, Geographies, Geography, Marker, createCoordinates } from '@vnedyalk0v/react19-simple-maps';
 import { Firm } from '@/lib/supabase';
 import { getFirmCoordinates } from '@/lib/cityCoordinates';
 
@@ -53,12 +53,12 @@ export default function WorldMap({
           {({ geographies }) =>
             geographies.map((geo) => (
               <Geography
-                key={geo.rsmKey}
+                key={(geo as any).rsmKey}
                 geography={geo}
                 fill="#F4F1EA"
                 stroke="#DCD5C4"
                 strokeWidth={0.6}
-                onMouseEnter={() => setHoverLabel(geo.properties.name)}
+                onMouseEnter={() => setHoverLabel(geo.properties?.name ?? '')}
                 onMouseLeave={() => setHoverLabel(null)}
                 style={{
                   default: { outline: 'none' },
@@ -72,13 +72,18 @@ export default function WorldMap({
 
         {firms.map((firm) => {
           const coords = getFirmCoordinates(firm.city ?? null, firm.country);
+
+          // Skip rendering a pin if we have no known coordinates for this firm,
+          // rather than passing undefined/null into createCoordinates.
+          if (!coords) return null;
+
           const color = pinColors[firm.highestClassification];
           const isPulsing = firm.highestClassification === 'critical' || firm.highestClassification === 'important';
 
           return (
             <Marker
               key={firm.id}
-              coordinates={coords}
+              coordinates={createCoordinates(coords[0], coords[1])}
               onClick={() => onSelectFirm(firm)}
               onMouseEnter={() => setHoverLabel(firm.name)}
               onMouseLeave={() => setHoverLabel(null)}
