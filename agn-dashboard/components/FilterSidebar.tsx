@@ -6,6 +6,7 @@ type Filters = {
   region: string;
   country: string;
   valuePillar: string;
+  savedOnly: boolean;
 };
 
 export default function FilterSidebar({
@@ -29,6 +30,16 @@ export default function FilterSidebar({
 
   return (
     <aside className="filter-sidebar">
+      <h3 className="filter-heading">Bookmarks</h3>
+      <div className="filter-group">
+        <button
+          className={`filter-chip ${filters.savedOnly ? 'active' : ''}`}
+          onClick={() => onChange({ ...filters, savedOnly: !filters.savedOnly })}
+        >
+          {filters.savedOnly ? '★ Saved only' : '☆ Saved only'}
+        </button>
+      </div>
+
       <h3 className="filter-heading">Region</h3>
       <div className="filter-group">
         <button

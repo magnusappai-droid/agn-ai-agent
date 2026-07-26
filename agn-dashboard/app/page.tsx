@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { supabase, Firm, Signal } from '@/lib/supabase';
+import { useSavedSignals } from '@/lib/useSavedSignals';
 import WorldMap from '@/components/WorldMap';
 import FirmModal from '@/components/FirmModal';
 import FilterSidebar from '@/components/FilterSidebar';
@@ -21,8 +22,15 @@ export default function DashboardPage() {
   const [signals, setSignals] = useState<Signal[]>([]);
   const [selectedFirm, setSelectedFirm] = useState<Firm | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ region: '', country: '', valuePillar: '' });
+  const [filters, setFilters] = useState({
+    region: '',
+    country: '',
+    valuePillar: '',
+    savedOnly: false,
+  });
   const [searchTerms, setSearchTerms] = useState({ country: '', city: '', firm: '' });
+
+  const { savedIds, toggleSave } = useSavedSignals();
 
   useEffect(() => {
     async function loadData() {
@@ -53,11 +61,19 @@ export default function DashboardPage() {
         !searchTerms.firm || f.name === searchTerms.firm)
 
       .map((firm) => {
-        const firmSignals = signals.filter(
+        let firmSignals = signals.filter(
           (s) => s.firm_id === firm.id && s.duplicate_status !== 'likely_duplicate'
         );
-        const relevantSignals = filters.valuePillar
-          ? firmSignals.filter((s) => s.value_pillar === filters.valuePillar)
+
+        if (filters.valuePillar) {
+          firmSignals = firmSignals.filter((s) => s.value_pillar === filters.valuePillar);
+        }
+
+        // Saved-only narrows the signals considered for this pin down to
+        // ones the current user has bookmarked -- this affects both
+        // whether the pin shows at all, and which classification colors it.
+        const relevantSignals = filters.savedOnly
+          ? firmSignals.filter((s) => savedIds.has(s.id))
           : firmSignals;
 
         const highest = relevantSignals.reduce((acc, s) => {
@@ -67,13 +83,23 @@ export default function DashboardPage() {
         return {
           ...firm,
           highestClassification: relevantSignals.length > 0 ? highest : 'none',
-        } as Firm & { highestClassification: string };
+          _relevantSignalCount: relevantSignals.length,
+        } as Firm & { highestClassification: string; _relevantSignalCount: number };
       })
       .filter((firm) => {
-        if (!filters.valuePillar) return true;
-        return signals.some((s) => s.firm_id === firm.id && s.value_pillar === filters.valuePillar);
+        // With a value pillar filter active, only show firms that have
+        // at least one matching signal at all.
+        if (filters.valuePillar && firm._relevantSignalCount === 0 && !filters.savedOnly) {
+          return false;
+        }
+        // Saved-only: only show firms with at least one saved signal
+        // (after any other filters above have already narrowed things down).
+        if (filters.savedOnly && firm._relevantSignalCount === 0) {
+          return false;
+        }
+        return true;
       });
-  }, [firms, signals, filters, searchTerms]);
+  }, [firms, signals, filters, searchTerms, savedIds]);
 
   const selectedFirmSignals = selectedFirm
     ? signals
@@ -106,6 +132,8 @@ export default function DashboardPage() {
         <FirmModal
           firm={selectedFirm}
           signals={selectedFirmSignals}
+          savedIds={savedIds}
+          onToggleSave={toggleSave}
           onClose={() => setSelectedFirm(null)}
         />
       )}

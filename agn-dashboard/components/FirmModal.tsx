@@ -16,13 +16,47 @@ const classificationColor: Record<string, string> = {
   neutral: '#8896A6',
 };
 
+function BookmarkButton({
+  saved,
+  onToggle,
+}: {
+  saved: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={`bookmark-btn ${saved ? 'saved' : ''}`}
+      onClick={onToggle}
+      aria-label={saved ? 'Remove bookmark' : 'Save bookmark'}
+    >
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill={saved ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+      </svg>
+    </button>
+  );
+}
+
 export default function FirmModal({
   firm,
   signals,
+  savedIds,
+  onToggleSave,
   onClose,
 }: {
   firm: Firm;
   signals: Signal[];
+  savedIds: Set<string>;
+  onToggleSave: (signalId: string) => void;
   onClose: () => void;
 }) {
   return (
@@ -66,6 +100,10 @@ export default function FirmModal({
                       year: 'numeric',
                     })}
                   </span>
+                  <BookmarkButton
+                    saved={savedIds.has(signal.id)}
+                    onToggle={() => onToggleSave(signal.id)}
+                  />
                 </div>
                 <p className="signal-text">{signal.raw_text}</p>
                 {signal.suggested_action && (
