@@ -72,11 +72,13 @@ export default function ListPage() {
       const { data: signalsData } = await supabase
         .from('signals')
         .select('*')
-        .neq('duplicate_status', 'likely_duplicate')
         .order('detected_at', { ascending: false });
 
       setFirms(firmsData || []);
-      setSignals(signalsData || []);
+      // Filter out duplicates in JS rather than in the query, since
+      // Postgres' .neq() silently excludes rows where duplicate_status
+      // is NULL instead of including them.
+      setSignals((signalsData || []).filter((s) => s.duplicate_status !== 'likely_duplicate'));
       setLoading(false);
     }
     loadData();
