@@ -5,7 +5,7 @@ import { ComposableMap, Geographies, Geography, Marker, createCoordinates } from
 import { Firm } from '@/lib/supabase';
 import { getFirmCoordinates } from '@/lib/cityCoordinates';
 
-const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
+const GEO_URL = '/countries-110m.json';
 
 type FirmWithStatus = Firm & {
   highestClassification: 'positive' | 'neutral' | 'important' | 'critical' | 'none';
