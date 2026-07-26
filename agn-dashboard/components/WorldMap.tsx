@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ComposableMap, Geographies, Geography, Marker, createCoordinates } from '@vnedyalk0v/react19-simple-maps';
 import { Firm } from '@/lib/supabase';
 import { getFirmCoordinates } from '@/lib/cityCoordinates';
@@ -29,6 +29,25 @@ export default function WorldMap({
   const [hoverLabel, setHoverLabel] = useState<string | null>(null);
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
 
+  // Fetch the topology ourselves rather than passing a URL to <Geographies>.
+  // The library's internal loader applies URL validation that rejects
+  // relative paths, so it never fires the request at all.
+  const [geoData, setGeoData] = useState<any>(null);
+  const [geoError, setGeoError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(GEO_URL)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${GEO_URL}`);
+        return res.json();
+      })
+      .then(setGeoData)
+      .catch((err) => {
+        console.error('Failed to fetch geography data:', err);
+        setGeoError(String(err));
+      });
+  }, []);
+
   return (
     <div
       className="world-map-wrap"
@@ -44,31 +63,37 @@ export default function WorldMap({
         </div>
       )}
 
+      {geoError && (
+        <p className="loading-text">Could not load map outlines.</p>
+      )}
+
       <ComposableMap
         projection="geoEqualEarth"
         projectionConfig={{ scale: 155 }}
         style={{ width: '100%', height: 'auto' }}
       >
-        <Geographies geography={GEO_URL}>
-          {({ geographies }) =>
-            geographies.map((geo) => (
-              <Geography
-                key={(geo as any).rsmKey}
-                geography={geo}
-                fill="#F4F1EA"
-                stroke="#DCD5C4"
-                strokeWidth={0.6}
-                onMouseEnter={() => setHoverLabel(geo.properties?.name ?? '')}
-                onMouseLeave={() => setHoverLabel(null)}
-                style={{
-                  default: { outline: 'none' },
-                  hover: { outline: 'none', fill: '#ECE6D8' },
-                  pressed: { outline: 'none' },
-                }}
-              />
-            ))
-          }
-        </Geographies>
+        {geoData && (
+          <Geographies geography={geoData}>
+            {({ geographies }) =>
+              geographies.map((geo) => (
+                <Geography
+                  key={(geo as any).rsmKey}
+                  geography={geo}
+                  fill="#F4F1EA"
+                  stroke="#DCD5C4"
+                  strokeWidth={0.6}
+                  onMouseEnter={() => setHoverLabel(geo.properties?.name ?? '')}
+                  onMouseLeave={() => setHoverLabel(null)}
+                  style={{
+                    default: { outline: 'none' },
+                    hover: { outline: 'none', fill: '#ECE6D8' },
+                    pressed: { outline: 'none' },
+                  }}
+                />
+              ))
+            }
+          </Geographies>
+        )}
 
         {firms.map((firm) => {
           const coords = getFirmCoordinates(firm.city ?? null, firm.country);
