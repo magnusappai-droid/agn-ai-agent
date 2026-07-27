@@ -735,3 +735,16 @@ html, body {
 .bookmark-btn.saved {
   color: var(--color-accent);
 }
+
+.login-forgot-link {
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-muted);
+  text-decoration: none;
+  margin-top: 16px;
+}
+
+.login-forgot-link:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+}

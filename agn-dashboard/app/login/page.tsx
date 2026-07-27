@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
 export default function LoginPage() {
@@ -71,6 +72,10 @@ export default function LoginPage() {
         <button type="submit" disabled={loading} className="login-button">
           {loading ? 'Signing in…' : 'Sign in'}
         </button>
+
+        <Link href="/reset-password" className="login-forgot-link">
+          Forgot your password?
+        </Link>
       </form>
     </main>
   );
