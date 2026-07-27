@@ -119,7 +119,7 @@ export default function ResetPasswordPage() {
         {!success && step === 'confirm' && (
           <>
             <label className="login-label" htmlFor="code">
-              6-digit code
+              8-digit code
             </label>
             <input
               id="code"
