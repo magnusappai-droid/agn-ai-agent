@@ -113,10 +113,10 @@ export default function ListPage() {
         return true;
       })
       .sort((a, b) => {
-        const severityDiff = severityRank[b.classification] - severityRank[a.classification];
-        if (severityDiff !== 0) return severityDiff;
-        return new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime();
-      });
+      const dateDiff = new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime();
+      if (dateDiff !== 0) return dateDiff;
+      return severityRank[b.classification] - severityRank[a.classification];
+    });
   }, [signals, firmById, filters, searchTerms, savedIds]);
 
   return (
