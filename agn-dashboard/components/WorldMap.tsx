@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ComposableMap, Geographies, Geography, Marker, createCoordinates } from '@vnedyalk0v/react19-simple-maps';
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup, createCoordinates } from '@vnedyalk0v/react19-simple-maps';
 import { Firm } from '@/lib/supabase';
 import { getFirmCoordinates } from '@/lib/cityCoordinates';
 
@@ -28,6 +28,7 @@ export default function WorldMap({
 }) {
   const [hoverLabel, setHoverLabel] = useState<string | null>(null);
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState({ coordinates: createCoordinates(10, 40), zoom: 1 });
 
   // Fetch the topology ourselves rather than passing a URL to <Geographies>.
   // The library's internal loader applies URL validation that rejects
@@ -48,6 +49,20 @@ export default function WorldMap({
       });
   }, []);
 
+  const handleZoomIn = () => {
+    if (position.zoom >= 8) return;
+    setPosition((pos) => ({ ...pos, zoom: pos.zoom * 1.5 }));
+  };
+
+  const handleZoomOut = () => {
+    if (position.zoom <= 1) return;
+    setPosition((pos) => ({ ...pos, zoom: pos.zoom / 1.5 }));
+  };
+
+  const handleReset = () => {
+    setPosition({ coordinates: createCoordinates(10, 40), zoom: 1 });
+  };
+
   return (
     <div
       className="world-map-wrap"
@@ -67,65 +82,84 @@ export default function WorldMap({
         <p className="loading-text">Could not load map outlines.</p>
       )}
 
+      <div className="map-zoom-controls">
+        <button onClick={handleZoomIn} aria-label="Zoom in">+</button>
+        <button onClick={handleZoomOut} aria-label="Zoom out">−</button>
+        <button onClick={handleReset} aria-label="Reset view" className="map-zoom-reset">Reset</button>
+      </div>
+
       <ComposableMap
         projection="geoEqualEarth"
         projectionConfig={{ scale: 155 }}
         style={{ width: '100%', height: 'auto' }}
       >
-        {geoData && (
-          <Geographies geography={geoData}>
-            {({ geographies }) =>
-              geographies.map((geo) => (
-                <Geography
-                  key={(geo as any).rsmKey}
-                  geography={geo}
-                  fill="#F4F1EA"
-                  stroke="#DCD5C4"
-                  strokeWidth={0.6}
-                  onMouseEnter={() => setHoverLabel(geo.properties?.name ?? '')}
-                  onMouseLeave={() => setHoverLabel(null)}
-                  style={{
-                    default: { outline: 'none' },
-                    hover: { outline: 'none', fill: '#ECE6D8' },
-                    pressed: { outline: 'none' },
-                  }}
+        <ZoomableGroup
+          center={position.coordinates}
+          zoom={position.zoom}
+          onMoveEnd={(pos: any) =>
+            setPosition({
+              coordinates: createCoordinates(pos.coordinates[0], pos.coordinates[1]),
+              zoom: pos.zoom,
+            })
+          }
+          minZoom={1}
+          maxZoom={8}
+        >
+          {geoData && (
+            <Geographies geography={geoData}>
+              {({ geographies }) =>
+                geographies.map((geo) => (
+                  <Geography
+                    key={(geo as any).rsmKey}
+                    geography={geo}
+                    fill="#F4F1EA"
+                    stroke="#DCD5C4"
+                    strokeWidth={0.6 / position.zoom}
+                    onMouseEnter={() => setHoverLabel(geo.properties?.name ?? '')}
+                    onMouseLeave={() => setHoverLabel(null)}
+                    style={{
+                      default: { outline: 'none' },
+                      hover: { outline: 'none', fill: '#ECE6D8' },
+                      pressed: { outline: 'none' },
+                    }}
+                  />
+                ))
+              }
+            </Geographies>
+          )}
+
+          {firms.map((firm) => {
+            const coords = getFirmCoordinates(firm.city ?? null, firm.country);
+
+            // Skip rendering a pin if we have no known coordinates for this firm,
+            // rather than passing undefined/null into createCoordinates.
+            if (!coords) return null;
+
+            const color = pinColors[firm.highestClassification];
+            const isPulsing = firm.highestClassification === 'critical' || firm.highestClassification === 'important';
+
+            return (
+              <Marker
+                key={firm.id}
+                coordinates={createCoordinates(coords[0], coords[1])}
+                onClick={() => onSelectFirm(firm)}
+                onMouseEnter={() => setHoverLabel(firm.name)}
+                onMouseLeave={() => setHoverLabel(null)}
+              >
+                {isPulsing && (
+                  <circle r={9 / position.zoom} fill={color} opacity={0.35} className="pin-pulse" />
+                )}
+                <circle
+                  r={6 / position.zoom}
+                  fill={color}
+                  stroke="#FFFFFF"
+                  strokeWidth={1.5 / position.zoom}
+                  className="pin-dot"
                 />
-              ))
-            }
-          </Geographies>
-        )}
-
-        {firms.map((firm) => {
-          const coords = getFirmCoordinates(firm.city ?? null, firm.country);
-
-          // Skip rendering a pin if we have no known coordinates for this firm,
-          // rather than passing undefined/null into createCoordinates.
-          if (!coords) return null;
-
-          const color = pinColors[firm.highestClassification];
-          const isPulsing = firm.highestClassification === 'critical' || firm.highestClassification === 'important';
-
-          return (
-            <Marker
-              key={firm.id}
-              coordinates={createCoordinates(coords[0], coords[1])}
-              onClick={() => onSelectFirm(firm)}
-              onMouseEnter={() => setHoverLabel(firm.name)}
-              onMouseLeave={() => setHoverLabel(null)}
-            >
-              {isPulsing && (
-                <circle r={9} fill={color} opacity={0.35} className="pin-pulse" />
-              )}
-              <circle
-                r={6}
-                fill={color}
-                stroke="#FFFFFF"
-                strokeWidth={1.5}
-                className="pin-dot"
-              />
-            </Marker>
-          );
-        })}
+              </Marker>
+            );
+          })}
+        </ZoomableGroup>
       </ComposableMap>
     </div>
   );
