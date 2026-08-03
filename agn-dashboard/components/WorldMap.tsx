@@ -91,6 +91,7 @@ export default function WorldMap({
       <ComposableMap
           projection="geoEqualEarth"
           projectionConfig={{ scale: 155 }}
+          viewBox="0 100 800 400"
           style={{ width: '100%', height: 'auto' }}
         >
 
