@@ -60,6 +60,7 @@ export default function ListPage() {
     region: '',
     country: '',
     valuePillar: '',
+    severity: '',
     savedOnly: false,
   });
   const [searchTerms, setSearchTerms] = useState({ country: '', city: '', firm: '' });
@@ -99,6 +100,7 @@ export default function ListPage() {
         if (filters.region && firm.region !== filters.region) return false;
         if (filters.country && firm.country !== filters.country) return false;
         if (filters.valuePillar && s.value_pillar !== filters.valuePillar) return false;
+        if (filters.severity && s.classification !== filters.severity) return false;
         if (
           searchTerms.country &&
           !(firm.country || '').toLowerCase().includes(searchTerms.country.toLowerCase())

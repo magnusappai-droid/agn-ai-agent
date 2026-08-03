@@ -6,6 +6,7 @@ type Filters = {
   region: string;
   country: string;
   valuePillar: string;
+  severity: string;
   savedOnly: boolean;
 };
 
@@ -91,6 +92,19 @@ export default function FilterSidebar({
             onClick={() => onChange({ ...filters, valuePillar: pillar })}
           >
             {pillar === '' ? 'All' : pillar.replace('_', ' ')}
+          </button>
+        ))}
+      </div>
+
+      <h3 className="filter-heading">Severity</h3>
+      <div className="filter-group">
+        {['', 'critical', 'important', 'positive', 'neutral'].map((sev) => (
+          <button
+            key={sev || 'all'}
+            className={`filter-chip ${filters.severity === sev ? 'active' : ''}`}
+            onClick={() => onChange({ ...filters, severity: sev })}
+          >
+            {sev === '' ? 'All' : sev}
           </button>
         ))}
       </div>

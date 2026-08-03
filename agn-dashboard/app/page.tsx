@@ -26,6 +26,7 @@ export default function DashboardPage() {
     region: '',
     country: '',
     valuePillar: '',
+    severity: '',
     savedOnly: false,
   });
   const [searchTerms, setSearchTerms] = useState({ country: '', city: '', firm: '' });
@@ -68,6 +69,9 @@ export default function DashboardPage() {
         if (filters.valuePillar) {
           firmSignals = firmSignals.filter((s) => s.value_pillar === filters.valuePillar);
         }
+        if (filters.severity) {
+          firmSignals = firmSignals.filter((s) => s.classification === filters.severity);
+        }
 
         // Saved-only narrows the signals considered for this pin down to
         // ones the current user has bookmarked -- this affects both
@@ -89,8 +93,8 @@ export default function DashboardPage() {
       .filter((firm) => {
         // With a value pillar filter active, only show firms that have
         // at least one matching signal at all.
-        if (filters.valuePillar && firm._relevantSignalCount === 0 && !filters.savedOnly) {
-          return false;
+        if ((filters.valuePillar || filters.severity) && firm._relevantSignalCount === 0 && !filters.savedOnly) {
+        return false;
         }
         // Saved-only: only show firms with at least one saved signal
         // (after any other filters above have already narrowed things down).
