@@ -615,7 +615,7 @@ html, body {
 
 .map-zoom-controls {
   position: absolute;
-  top: 16px;
+  bottom: 16px;
   right: 16px;
   z-index: 10;
   display: flex;
