@@ -139,6 +139,12 @@ html, body {
   touch-action: none;
 }
 
+.world-map-wrap svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 .loading-text {
   text-align: center;
   color: var(--color-muted);

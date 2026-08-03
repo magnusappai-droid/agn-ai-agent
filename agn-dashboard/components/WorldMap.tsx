@@ -89,13 +89,11 @@ export default function WorldMap({
       </div>
 
       <ComposableMap
-        projection="geoEqualEarth"
-        projectionConfig={{ scale: 155 }}
-        width={800}
-        height={400}
-        style={{ width: '100%', height: 'auto' }}
+          projection="geoEqualEarth"
+          projectionConfig={{ scale: 155 }}
+          style={{ width: '100%', height: 'auto' }}
         >
-          
+
         <ZoomableGroup
           center={position.coordinates}
           zoom={position.zoom}
