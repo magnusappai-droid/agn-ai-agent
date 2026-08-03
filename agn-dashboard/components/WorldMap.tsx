@@ -28,7 +28,7 @@ export default function WorldMap({
 }) {
   const [hoverLabel, setHoverLabel] = useState<string | null>(null);
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
-  const [position, setPosition] = useState({ coordinates: createCoordinates(10, 40), zoom: 1 });
+  const [position, setPosition] = useState({ coordinates: createCoordinates(10, 20), zoom: 1 });
 
   // Fetch the topology ourselves rather than passing a URL to <Geographies>.
   // The library's internal loader applies URL validation that rejects
@@ -60,7 +60,7 @@ export default function WorldMap({
   };
 
   const handleReset = () => {
-    setPosition({ coordinates: createCoordinates(10, 40), zoom: 1 });
+    setPosition({ coordinates: createCoordinates(10, 20), zoom: 1 });
   };
 
   return (
