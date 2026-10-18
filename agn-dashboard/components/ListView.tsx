@@ -15,6 +15,13 @@ const severityRank: Record<string, number> = {
   neutral: 1,
 };
 
+// Pipeline temperature, hottest first.
+const tempRank: Record<string, number> = {
+  hot: 3,
+  warm: 2,
+  cold: 1,
+};
+
 const classificationColor: Record<string, string> = {
   critical: '#C0392B',
   important: '#D68910',
@@ -61,6 +68,7 @@ export default function ListView({ firmType }: { firmType: 'member' | 'prospect'
     country: '',
     valuePillar: '',
     severity: '',
+    leadStatus: '',
     savedOnly: false,
   });
   const [searchTerms, setSearchTerms] = useState({ country: '', city: '', firm: '' });
@@ -107,6 +115,14 @@ export default function ListView({ firmType }: { firmType: 'member' | 'prospect'
     };
   }, [firmType]);
 
+  // Clear the temperature filter when switching audience, so a filter set on
+  // the prospect page does not silently empty the member page.
+  useEffect(() => {
+    if (firmType !== 'prospect') {
+      setFilters((f) => (f.leadStatus ? { ...f, leadStatus: '' } : f));
+    }
+  }, [firmType]);
+
   const firmById = useMemo(() => {
     const map = new Map<string, Firm>();
     firms.forEach((f) => map.set(f.id, f));
@@ -123,6 +139,7 @@ export default function ListView({ firmType }: { firmType: 'member' | 'prospect'
         if (filters.country && firm.country !== filters.country) return false;
         if (filters.valuePillar && s.value_pillar !== filters.valuePillar) return false;
         if (filters.severity && s.classification !== filters.severity) return false;
+        if (filters.leadStatus && firm.lead_status !== filters.leadStatus) return false;
         if (
           searchTerms.country &&
           !(firm.country || '').toLowerCase().includes(searchTerms.country.toLowerCase())
@@ -130,23 +147,33 @@ export default function ListView({ firmType }: { firmType: 'member' | 'prospect'
           return false;
         if (
           searchTerms.city &&
-          !((firm as any).city || '').toLowerCase().includes(searchTerms.city.toLowerCase())
+          !(firm.city || '').toLowerCase().includes(searchTerms.city.toLowerCase())
         )
           return false;
         if (searchTerms.firm && firm.name !== searchTerms.firm) return false;
         return true;
       })
       .sort((a, b) => {
+        // Prospects lead on temperature: a business-development user works
+        // hot leads first regardless of when the signal landed. Members have
+        // no temperature, so their order is unchanged.
+        if (firmType === 'prospect') {
+          const tempA = tempRank[firmById.get(a.firm_id)?.lead_status || ''] || 0;
+          const tempB = tempRank[firmById.get(b.firm_id)?.lead_status || ''] || 0;
+          if (tempA !== tempB) return tempB - tempA;
+        }
+
+        // Then day, with severity only as a tiebreaker within the same day.
         const dateA = new Date(a.detected_at).toDateString();
         const dateB = new Date(b.detected_at).toDateString();
-  
-         if (dateA !== dateB) {
-         return new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime();
+
+        if (dateA !== dateB) {
+          return new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime();
         }
-  
+
         return severityRank[b.classification] - severityRank[a.classification];
-        });
-  }, [signals, firmById, filters, searchTerms, savedIds]);
+      });
+  }, [signals, firmById, filters, searchTerms, savedIds, firmType]);
 
   return (
     <main className="dashboard">
@@ -158,7 +185,12 @@ export default function ListView({ firmType }: { firmType: 'member' | 'prospect'
       <Tabs />
 
       <div className="dashboard-body">
-        <FilterSidebar firms={firms} filters={filters} onChange={setFilters} />
+        <FilterSidebar
+          firms={firms}
+          filters={filters}
+          onChange={setFilters}
+          firmType={firmType}
+        />
 
         <div className="list-container">
           {loading ? (
@@ -185,6 +217,15 @@ export default function ListView({ firmType }: { firmType: 'member' | 'prospect'
                         {signal.classification}
                       </span>
                       <span className="list-card-firm">{firm?.name || 'Unknown firm'}</span>
+
+                      {/* Prospect temperature. Members have no lead_status, so the
+                          guard keeps the member list exactly as it was. */}
+                      {firmType === 'prospect' && firm?.lead_status && (
+                        <span className={`temp-badge temp-${firm.lead_status}`}>
+                          {firm.lead_status}
+                        </span>
+                      )}
+
                       <span className="list-card-location">
                         {firm?.country}
                       </span>

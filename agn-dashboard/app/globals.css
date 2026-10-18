@@ -10,6 +10,10 @@
   --color-important: #D68910;
   --color-positive: #277A5C;
   --color-neutral: #8896A6;
+  /* Pipeline temperature. Hot and warm deliberately reuse the critical and
+     important hues; cold needs its own, so it is defined here rather than
+     hardcoded alongside them. */
+  --color-cold: #5B7C99;
 }
 
 * {
@@ -122,6 +126,26 @@ html, body {
   color: var(--color-accent);
   font-weight: 600;
 }
+
+/* Sidebar temperature chips. A coloured dot rather than a coloured chip, so
+   the active state stays identical to every other filter group. */
+.chip-temp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chip-temp::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chip-temp-hot::before  { background: var(--color-critical); }
+.chip-temp-warm::before { background: var(--color-important); }
+.chip-temp-cold::before { background: var(--color-cold); }
 
 .map-container {
   background: var(--color-paper-warm);
@@ -397,10 +421,22 @@ html, body {
   padding-right: 28px;
 }
 
+.tabs-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Single definition. This file previously declared .tabs-row twice, once with
+   margin-bottom 24px and again with 0; the spacing now lives on
+   .tabs-wrapper, so 0 is correct here. */
 .tabs-row {
   display: flex;
   gap: 4px;
-  margin-bottom: 24px;
+  margin-bottom: 0;
 }
 
 .tab-link {
@@ -422,6 +458,35 @@ html, body {
 .tab-link.active {
   color: var(--color-accent);
   border-bottom-color: var(--color-accent);
+}
+
+.audience-row {
+  display: flex;
+  gap: 4px;
+  background: var(--color-paper-warm);
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.audience-link {
+  font-family: var(--font-body), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--color-muted);
+  padding: 6px 14px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.audience-link:hover {
+  color: var(--color-ink);
+}
+
+.audience-link.active {
+  background: var(--color-paper);
+  color: var(--color-accent);
 }
 
 .list-container {
@@ -466,6 +531,35 @@ html, body {
   font-size: 12px;
   color: var(--color-muted);
 }
+
+/* Prospect temperature. Deliberately an outlined pill, not a solid fill,
+   so it never reads as a severity badge sitting next to one. */
+.temp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px 2px 7px;
+  border-radius: 11px;
+  border: 1px solid currentColor;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.temp-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.temp-hot  { color: var(--color-critical); }
+.temp-warm { color: var(--color-important); }
+.temp-cold { color: var(--color-cold); }
 
 .login-page {
   min-height: 100vh;
@@ -655,48 +749,4 @@ html, body {
   font-size: 11px !important;
   font-weight: 600;
   padding: 0 8px;
-}
-
-.tabs-wrapper {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.tabs-row {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 0;
-}
-
-.audience-row {
-  display: flex;
-  gap: 4px;
-  background: var(--color-paper-warm);
-  border: 1px solid var(--color-line);
-  border-radius: 8px;
-  padding: 3px;
-}
-
-.audience-link {
-  font-family: var(--font-body), sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-  color: var(--color-muted);
-  padding: 6px 14px;
-  border-radius: 6px;
-  transition: all 0.15s ease;
-}
-
-.audience-link:hover {
-  color: var(--color-ink);
-}
-
-.audience-link.active {
-  background: var(--color-paper);
-  color: var(--color-accent);
 }

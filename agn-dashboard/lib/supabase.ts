@@ -11,8 +11,10 @@ export type Firm = {
   country: string | null;
   city: string | null;
   region: string | null;
-  firm_type: string;
+  firm_type: 'member' | 'prospect';
   membership_tier: string | null;
+  // Pipeline temperature. Null for members, who have no lead status.
+  lead_status: 'hot' | 'warm' | 'cold' | null;
   size_estimate: string | null;
   service_mix: string | null;
   website: string | null;

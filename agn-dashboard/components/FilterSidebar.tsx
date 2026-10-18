@@ -7,6 +7,7 @@ type Filters = {
   country: string;
   valuePillar: string;
   severity: string;
+  leadStatus: string;
   savedOnly: boolean;
 };
 
@@ -14,10 +15,12 @@ export default function FilterSidebar({
   firms,
   filters,
   onChange,
+  firmType = 'member',
 }: {
   firms: Firm[];
   filters: Filters;
   onChange: (filters: Filters) => void;
+  firmType?: 'member' | 'prospect';
 }) {
   const regions = Array.from(new Set(firms.map((f) => f.region).filter(Boolean))) as string[];
   const countriesInRegion = Array.from(
@@ -28,6 +31,14 @@ export default function FilterSidebar({
         .filter(Boolean)
     )
   ) as string[];
+
+  // Only offer temperatures that actually exist in the loaded prospects, so
+  // the control never shows an option that returns nothing.
+  const leadStatuses = (['hot', 'warm', 'cold'] as const).filter((status) =>
+    firms.some((f) => f.lead_status === status)
+  );
+
+  const showTemperature = firmType === 'prospect' && leadStatuses.length > 0;
 
   return (
     <aside className="filter-sidebar">
@@ -40,6 +51,31 @@ export default function FilterSidebar({
           {filters.savedOnly ? '★ Saved only' : '☆ Saved only'}
         </button>
       </div>
+
+      {showTemperature && (
+        <>
+          <h3 className="filter-heading">Temperature</h3>
+          <div className="filter-group">
+            <button
+              className={`filter-chip ${filters.leadStatus === '' ? 'active' : ''}`}
+              onClick={() => onChange({ ...filters, leadStatus: '' })}
+            >
+              All
+            </button>
+            {leadStatuses.map((status) => (
+              <button
+                key={status}
+                className={`filter-chip chip-temp chip-temp-${status} ${
+                  filters.leadStatus === status ? 'active' : ''
+                }`}
+                onClick={() => onChange({ ...filters, leadStatus: status })}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       <h3 className="filter-heading">Region</h3>
       <div className="filter-group">

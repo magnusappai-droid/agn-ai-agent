@@ -27,6 +27,7 @@ export default function MapView({ firmType }: { firmType: 'member' | 'prospect' 
     country: '',
     valuePillar: '',
     severity: '',
+    leadStatus: '',
     savedOnly: false,
   });
   const [searchTerms, setSearchTerms] = useState({ country: '', city: '', firm: '' });
@@ -70,15 +71,26 @@ export default function MapView({ firmType }: { firmType: 'member' | 'prospect' 
     };
   }, [firmType]);
 
+  // Clear the temperature filter when switching audience, so a filter set on
+  // the prospect page does not silently empty the member map.
+  useEffect(() => {
+    if (firmType !== 'prospect') {
+      setFilters((f) => (f.leadStatus ? { ...f, leadStatus: '' } : f));
+    }
+  }, [firmType]);
+
   const firmsWithStatus = useMemo(() => {
     return firms
       .filter((f) => !filters.region || f.region === filters.region)
       .filter((f) => !filters.country || f.country === filters.country)
+      // Temperature is a property of the firm, so it narrows the pins
+      // themselves rather than the signals attached to them.
+      .filter((f) => !filters.leadStatus || f.lead_status === filters.leadStatus)
       .filter((f) =>
         !searchTerms.country || (f.country || '').toLowerCase().includes(searchTerms.country.toLowerCase())
       )
       .filter((f) =>
-        !searchTerms.city || ((f as any).city || '').toLowerCase().includes(searchTerms.city.toLowerCase())
+        !searchTerms.city || (f.city || '').toLowerCase().includes(searchTerms.city.toLowerCase())
       )
       .filter((f) =>
         !searchTerms.firm || f.name === searchTerms.firm)
@@ -116,7 +128,7 @@ export default function MapView({ firmType }: { firmType: 'member' | 'prospect' 
         // With a value pillar filter active, only show firms that have
         // at least one matching signal at all.
         if ((filters.valuePillar || filters.severity) && firm._relevantSignalCount === 0 && !filters.savedOnly) {
-        return false;
+          return false;
         }
         // Saved-only: only show firms with at least one saved signal
         // (after any other filters above have already narrowed things down).
@@ -143,7 +155,12 @@ export default function MapView({ firmType }: { firmType: 'member' | 'prospect' 
       <Tabs />
 
       <div className="dashboard-body">
-        <FilterSidebar firms={firms} filters={filters} onChange={setFilters} />
+        <FilterSidebar
+          firms={firms}
+          filters={filters}
+          onChange={setFilters}
+          firmType={firmType}
+        />
 
         <div className="map-container">
           {loading ? (
